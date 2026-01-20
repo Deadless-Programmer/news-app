@@ -92,11 +92,12 @@ export default function Home() {
         </section>
 
         {/* Loading */}
-        {loading && (
-          <div className="text-center py-20">
-            <p className="text-xl text-gray-600">Loading headlines...</p>
-          </div>
-        )}
+       {loading && (
+  <div className="text-center py-20">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid mx-auto mb-4"></div>
+    <p className="text-xl text-gray-600">Loading headlines...</p>
+  </div>
+)}
 
         {/* Error */}
         {error && !loading && (
@@ -171,18 +172,27 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          !loading && !error && (
-            <div className="text-center py-20 text-gray-600">
-              <h3 className="text-2xl font-medium mb-4">No headlines available</h3>
-              <p>
-                No top stories found for {countries.find((c) => c.code === selectedCountry)?.name || selectedCountry.toUpperCase()}
-                {selectedCategory ? ` in ${selectedCategory}` : ''}.
-              </p>
-              <p className="mt-2">Try another country or category.</p>
-            </div>
-          )
-        )}
+  !loading && !error && (
+    <div className="text-center py-20 text-gray-600">
+      <h3 className="text-2xl font-medium mb-4">No headlines available</h3>
+      <p>
+        No top stories found for {countries.find((c) => c.code === selectedCountry)?.name || selectedCountry.toUpperCase()}
+        {selectedCategory ? ` in ${selectedCategory}` : ''}.
+      </p>
+      <p className="mt-2">Try another country or category.</p>
+
+      <p className="mt-6 text-sm text-gray-500 italic max-w-xl mx-auto">
+        Note: News availability depends on NewsAPI sources — some countries may have limited or no top headlines at times (especially outside US).
+      </p>
+    </div>
+  )
+)}
       </div>
+
+      {/* Footer note */}
+      <footer className="mt-12 text-center text-sm text-gray-500">
+        <p>Note: News availability depends on NewsAPI sources — some countries may have limited or no top headlines at times (especially outside US).</p>
+      </footer>
     </main>
   )
 }
