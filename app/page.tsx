@@ -1,64 +1,63 @@
-'use client'
+// app/page.tsx
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
-import Image from 'next/image'
-import { countries } from '@/data/countries'
-import { categories } from '@/data/categories'
-import CategorySelector from '@/components/CategorySelector'  
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
+import { countries } from '@/data/countries';
+import { categories } from '@/data/categories';
+import CategorySelector from '@/components/CategorySelector';
 
 export default function Home() {
-  const searchParams = useSearchParams()
-  const selectedCountry = searchParams.get('country') || 'us'
-  const selectedCategory = searchParams.get('category') || ''
+  const searchParams = useSearchParams();
+  const selectedCountry = searchParams.get('country') || 'us';
+  const selectedCategory = searchParams.get('category') || '';
 
-  const [articles, setArticles] = useState<any[]>([])
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [articles, setArticles] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchNews = async () => {
-      setLoading(true)
-      setError(null)
-      setArticles([])
+      setLoading(true);
+      setError(null);
+      setArticles([]);
 
       try {
-        const categoryParam = selectedCategory ? `&category=${selectedCategory}` : ''
-        const url = `https://newsapi.org/v2/top-headlines?country=${selectedCountry}${categoryParam}&pageSize=12&apiKey=${process.env.NEXT_PUBLIC_NEWS_API_KEY}`
-
-        console.log('Fetching from:', url)
-
-        const res = await fetch(url, {
-          cache: 'no-store',  
-        })
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}))
-          throw new Error(`NewsAPI error: ${res.status} - ${errData.message || 'Unknown error'}`)
+        // Build query for our own API route (keeps API key server-side)
+        const params = new URLSearchParams({
+          country: selectedCountry,
+        });
+        if (selectedCategory) {
+          params.append('category', selectedCategory);
         }
 
-        const data = await res.json()
-        console.log('API Response:', {
-          totalResults: data.totalResults,
-          articlesCount: data.articles?.length || 0,
-          country: selectedCountry,
-          category: selectedCategory || 'general',
-        })
+        const response = await fetch(`/api/news?${params.toString()}`, {
+          cache: 'no-store',
+        });
 
-        setArticles(data.articles || [])
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(
+            errData.message ||
+              `Failed to load news (HTTP ${response.status})`
+          );
+        }
+
+        const data = await response.json();
+        setArticles(data.articles || []);
       } catch (err: any) {
-        setError(err.message || 'Failed to load news. Check connection or API key.')
-        console.error('Fetch error:', err)
+        setError(err.message || 'Failed to load news. Please try again later.');
+        console.error('News fetch error:', err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchNews()
-  }, [selectedCountry, selectedCategory]) 
+    fetchNews();
+  }, [selectedCountry, selectedCategory]);
 
   return (
-    
     <main className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl sm:text-5xl font-bold text-center mb-10 text-gray-900">
@@ -76,9 +75,11 @@ export default function Home() {
                 key={country.code}
                 href={`/?country=${country.code}`}
                 className={`flex flex-col items-center p-4 rounded-xl border-2 text-center transition-all duration-200 cursor-pointer
-                  ${selectedCountry === country.code
-                    ? 'border-blue-600 bg-blue-50 shadow-lg scale-105'
-                    : 'border-gray-200 hover:border-blue-300 hover:shadow-md hover:scale-105'}`}
+                  ${
+                    selectedCountry === country.code
+                      ? 'border-blue-600 bg-blue-50 shadow-lg scale-105'
+                      : 'border-gray-200 hover:border-blue-300 hover:shadow-md hover:scale-105'
+                  }`}
               >
                 <span className="text-4xl mb-2">{country.flag}</span>
                 <span className="text-sm font-medium">{country.name}</span>
@@ -87,18 +88,18 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Category */}
+        {/* Category Selector */}
         <section className="mb-10 text-center">
           <CategorySelector />
         </section>
 
         {/* Loading */}
-       {loading && (
-  <div className="text-center py-20">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid mx-auto mb-4"></div>
-    <p className="text-xl text-gray-600">Loading headlines...</p>
-  </div>
-)}
+        {loading && (
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid mx-auto mb-4"></div>
+            <p className="text-xl text-gray-600">Loading headlines...</p>
+          </div>
+        )}
 
         {/* Error */}
         {error && !loading && (
@@ -122,7 +123,7 @@ export default function Home() {
                   {article.urlToImage ? (
                     <Image
                       src={article.urlToImage}
-                      alt={article.title || "News image"}
+                      alt={article.title || 'News image'}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -139,7 +140,8 @@ export default function Home() {
                   <span
                     className={`inline-block px-3 py-1 text-xs font-semibold rounded-full mb-3 w-fit ${
                       selectedCategory
-                        ? categories.find((c) => c.code === selectedCategory)?.color || 'bg-gray-200 text-gray-800'
+                        ? categories.find((c) => c.code === selectedCategory)?.color ||
+                          'bg-gray-200 text-gray-800'
                         : 'bg-gray-200 text-gray-800'
                     }`}
                   >
@@ -173,27 +175,32 @@ export default function Home() {
             ))}
           </div>
         ) : (
-  !loading && !error && (
-    <div className="text-center py-20 text-gray-600">
-      <h3 className="text-2xl font-medium mb-4">No headlines available</h3>
-      <p>
-        No top stories found for {countries.find((c) => c.code === selectedCountry)?.name || selectedCountry.toUpperCase()}
-        {selectedCategory ? ` in ${selectedCategory}` : ''}.
-      </p>
-      <p className="mt-2">Try another country or category.</p>
+          !loading &&
+          !error && (
+            <div className="text-center py-20 text-gray-600">
+              <h3 className="text-2xl font-medium mb-4">No headlines available</h3>
+              <p>
+                No top stories found for{' '}
+                {countries.find((c) => c.code === selectedCountry)?.name ||
+                  selectedCountry.toUpperCase()}
+                {selectedCategory ? ` in ${selectedCategory}` : ''}.
+              </p>
+              <p className="mt-2">Try another country or category.</p>
 
-      <p className="mt-6 text-sm text-gray-500 italic max-w-xl mx-auto">
-        Note: News availability depends on NewsAPI sources — some countries may have limited or no top headlines at times (especially outside US).
-      </p>
-    </div>
-  )
-)}
+              <p className="mt-6 text-sm text-gray-500 italic max-w-xl mx-auto">
+                Note: News availability depends on NewsAPI sources — some countries may have limited or no top headlines at times (especially outside US).
+              </p>
+            </div>
+          )
+        )}
       </div>
 
       {/* Footer note */}
       <footer className="mt-12 text-center text-sm text-gray-500">
-        <p>Note: News availability depends on NewsAPI sources — some countries may have limited or no top headlines at times (especially outside US).</p>
+        <p>
+          Note: News availability depends on NewsAPI sources — some countries may have limited or no top headlines at times (especially outside US).
+        </p>
       </footer>
     </main>
-  )
+  );
 }
